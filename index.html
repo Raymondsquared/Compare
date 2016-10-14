@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
+  <title>Compare</title>
+
+  <!-- CSS  -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="styles/materialize.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+  <link href="styles/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+</head>
+<body>
+  <nav class="light-blue lighten-1" role="navigation">
+    <div class="nav-wrapper container"><a id="logo-container" href="#" class="brand-logo">Compare</a>
+      <ul class="right hide-on-med-and-down">
+        <li><a href="#">Menu</a></li>
+      </ul>
+
+      <ul id="nav-mobile" class="side-nav">
+        <li><a href="#">Menu/a></li>
+      </ul>
+      <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>
+    </div>
+  </nav>
+  <div class="container">
+    <div class="section">
+      <div class="row">
+        <div class="col s12">
+          <table class="responsive-table striped">
+               <thead>
+                 <tr>
+                     <th data-field="section">Section</th>
+                     <th data-field="sparta"><img src="images/sparta/logo.png" height='100px'/></th>
+                     <th data-field="apex"><img src="images/apex/logo.png" width='200px'/></th>
+                 </tr>
+               </thead>
+
+               <tbody>
+                 <tr>
+                   <td>Documentations</td>
+                   <td><a href="https://github.com/mweagle/Sparta" target="_blank"> https://github.com/mweagle/Sparta </a></td>
+                   <td>
+                     <a href="https://github.com/apex/apex" target="_blank"> https://github.com/apex/apex </a>
+                     <a href="https://github.com/apex/go-apex" target="_blank"> https://github.com/apex/go-apex </a>
+                   </td>
+                 </tr>
+                 <tr>
+                     <td>Hello World</td>
+                     <td><a href="https://play.golang.org/p/8Xrf9g-U-J" target="_blank"> https://play.golang.org/p/8Xrf9g-U-J </a></td>
+                     <td><a href="https://play.golang.org/p/8Exy5dQjBz" target="_blank"> https://play.golang.org/p/8Exy5dQjBz </a></td>
+                 </tr>
+                 <tr>
+                     <td>Folder Structure</td>
+                     <td><img src="images/sparta/folder.png" height='200px'/></td>
+                     <td><img src="images/apex/folder.png" height='200px'/></td>
+                 </tr>
+                 <tr>
+                   <td>Command</td>
+                   <td>
+<pre class="prettyprint">
+$ go run main.go provision --s3Bucket $S3_BUCKET
+$ go run main.go delete
+</pre>
+                   </td>
+                   <td>
+<pre class="prettyprint">
+$ apex init
+$ apex deploy --region ap-southeast-2
+$ apex delete
+</pre>
+                   </td>
+                 </tr>
+                 <tr>
+                     <td>Infrasturcture</td>
+                     <td>go build to linux and translate stack from Domain Specific Language to Cloud Formation</td>
+                     <td>go build to linux and deploy with aws-sdk-go/service/lambda create method</td>
+                 </tr>
+                 <tr>
+                     <td>Provision Files</td>
+                     <td>
+                        <a href="images/sparta/stack.zip" download> binaries </a>
+                        <br/>
+                        <a href="images/sparta/stack-cf.json" download> cloud formation </a>
+                     </td>
+                     <td>-</td>
+                 </tr>
+                 <tr>
+                     <td>Logging</td>
+                     <td>github.com/Sirupsen/logrus</td>
+                     <td>*</td>
+                 </tr>
+                 <tr>
+                     <td>S3 EventSource</td>
+                     <td>
+                       it creates 2 Functions :
+                       <br />
+                       <br />
+                       <br />
+                       1. MyTransformerStack-CUSTOMxGOAWSxS3LAMBDAEVENTSOURC-DZOF5L1SLBK5
+                       <br />
+                       - MyTransformerStack: CloudFormation CustomResource to configure Custom::goAWS::S3LambdaEventSourceResource
+                       <br />
+                       <br />
+                       2. MyTransformerStack-maintransformMessageLambda23f8f-K4T0S5XHD392 (S3 events go here)
+                       <br />
+                       - MyTransformerStack: main.transformMessage
+                     </td>
+                     <td>
+                       it creates 1 function : project_transformMesage
+                     </td>
+                 </tr>
+                 <tr>
+                     <td>Action Per Event</td>
+                     <td>
+                         Invoke the function once / Event
+                     </td>
+                     <td>
+                       Invoke the function once / Event
+                     </td>
+                 </tr>
+                 <tr>
+                     <td>Code to consume S3 events</td>
+                     <td>
+ <pre class="prettyprint">
+ package main
+
+ import (
+ 	"encoding/base64"
+ 	"encoding/json"
+ 	"io/ioutil"
+ 	"log"
+ 	"net/http"
+
+ 	"github.com/Sirupsen/logrus"
+ 	"github.com/aws/aws-sdk-go/aws"
+ 	"github.com/aws/aws-sdk-go/aws/session"
+ 	"github.com/aws/aws-sdk-go/service/s3"
+ 	sparta "github.com/mweagle/Sparta"
+ 	spartaS3 "github.com/mweagle/Sparta/aws/s3"
+ )
+
+ func transformMessage(
+  event *json.RawMessage,
+  context *sparta.LambdaContext,
+  w http.ResponseWriter,
+  logger *logrus.Logger) {
+ 	logger.WithFields(logrus.Fields{
+ 		"RequestID": context.AWSRequestID,
+ 		"Event":     string(*event),
+ 	}).Info("Request received")
+
+ 	var lambdaEvent spartaS3.Event
+ 	err := json.Unmarshal([]byte(*event), &lambdaEvent)
+ 	if err != nil {
+ 		logger.Error("Failed to unmarshal event data: ", err.Error())
+ 		http.Error(w, err.Error(), http.StatusInternalServerError)
+ 	}
+ 	readFromS3andDoMapping(lambdaEvent)
+ }
+
+ func main() {
+ 	var lambdaFunctions []*sparta.LambdaAWSInfo
+
+ 	transformMessageFn := sparta.NewLambda(sparta.IAMRoleDefinition{},
+ 		transformMessage,
+ 		nil)
+
+ 	transformMessageFn.Permissions = append(transformMessageFn.Permissions,
+    sparta.S3Permission{
+ 		   BasePermission: sparta.BasePermission{
+ 			     SourceArn: "arn:aws:s3:::rr-go-sparta",
+ 		      },
+ 		       Events: []string{"s3:ObjectCreated:*"},
+ 	})
+
+ 	lambdaFunctions = append(lambdaFunctions, transformMessageFn)
+
+ 	sparta.Main("MyTransformerStack",
+ 		"Simple Sparta application that demonstrates core functionality",
+ 		lambdaFunctions,
+ 		nil,
+ 		nil)
+ }
+ </pre>
+                     </td>
+                     <td>
+ <pre class="prettyprint">
+ package main
+
+ import (
+ 	"encoding/base64"
+ 	"encoding/json"
+ 	"io/ioutil"
+ 	"log"
+
+ 	apex "github.com/apex/go-apex"
+ 	apexS3 "github.com/apex/go-apex/s3"
+ 	"github.com/aws/aws-sdk-go/aws"
+ 	"github.com/aws/aws-sdk-go/aws/session"
+ 	"github.com/aws/aws-sdk-go/service/s3"
+ )
+
+ func main() {
+ 	apexS3.HandleFunc(func(event *apexS3.Event, ctx *apex.Context) error {
+ 		readFromS3andDoMapping(event)
+ 		return nil
+ 	})
+ }
+ </pre>
+                     </td>
+                 </tr>
+                 <tr>
+                     <td>Time</td>
+                     <td>
+                       2000-2600ms per action (get file from s3 + mapping)
+                     </td>
+                     <td>
+                      700-800ms per action (get file from s3 + mapping)
+                     </td>
+                 </tr>
+               </tbody>
+             </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="page-footer orange">
+    <div class="container">
+      <div class="row">
+        <div class="col l6 s12">
+          <h5 class="white-text">Sparta Vs Apex</h5>
+        </div>
+      </div>
+    </div>
+    <div class="footer-copyright">
+      <div class="container">
+      Made by <a class="orange-text text-lighten-3" href="http://materializecss.com">Materialize</a>
+      </div>
+    </div>
+  </footer>
+
+  <!--  Scripts-->
+  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+  <script src="scripts/materialize.js"></script>
+  <script src="scripts/init.js"></script>
+
+  </body>
+</html>

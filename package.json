@@ -1,0 +1,22 @@
+{
+  "name": "compare",
+  "version": "1.0.0",
+  "description": "compare everything",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Raymondsquared/Compare.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Raymondsquared/Compare/issues"
+  },
+  "homepage": "https://github.com/Raymondsquared/Compare#readme",
+  "devDependencies": {
+    "materialize-css": "^0.97.7"
+  }
+}
